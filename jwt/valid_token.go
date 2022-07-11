@@ -7,9 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func IsValidJWT(c *gin.Context) {
+func IsValidJWT(c *gin.Context) (bool, jwt.MapClaims) {
 	t := c.GetHeader("Authorization")
-	claims := &authenticationClaim{}
+	claims := jwt.MapClaims{}
 
 	token, err := jwt.ParseWithClaims(
 		t[7:],
@@ -23,11 +23,7 @@ func IsValidJWT(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),
 		})
-		return
-	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Valid Token!",
-		})
-		return
+		return false, nil
 	}
+	return true, claims
 }

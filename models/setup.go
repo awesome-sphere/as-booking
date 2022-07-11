@@ -5,7 +5,7 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/awesome-sphere/as-seating/utils"
+	"github.com/awesome-sphere/as-booking/utils"
 	"github.com/shopspring/decimal"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
