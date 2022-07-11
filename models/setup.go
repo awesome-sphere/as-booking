@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/awesome-sphere/as-booking/utils"
-	"github.com/shopspring/decimal"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/sharding"
@@ -45,12 +44,16 @@ func InitDatabase() {
 	db.AutoMigrate(&Seat{}, &Theater{})
 	for i := 1; i <= theater_number; i++ {
 		time_slot_table := fmt.Sprintf("time_slots_%01d", i)
-		db.AutoMigrate(&TimeSlot{})
-		db.Migrator().RenameTable("time_slots", time_slot_table)
+		if !db.Migrator().HasTable(time_slot_table) {
+			db.AutoMigrate(&TimeSlot{})
+			db.Migrator().RenameTable("time_slots", time_slot_table)
+		}
 
 		seat_info_table := fmt.Sprintf("seat_infos_%01d", i)
-		db.AutoMigrate(&SeatInfo{})
-		db.Migrator().RenameTable("seat_infos", seat_info_table)
+		if !db.Migrator().HasTable(seat_info_table) {
+			db.AutoMigrate(&SeatInfo{})
+			db.Migrator().RenameTable("seat_infos", seat_info_table)
+		}
 
 	}
 	db.Use(sharding.Register(sharding.Config{
@@ -60,8 +63,8 @@ func InitDatabase() {
 	}, "time_slots", "seat_infos"))
 	DB = db
 	// // Testing
-	db.Create(&SeatType{ID: 1, Price: decimal.NewFromFloat(69.9), Type: Standard})
-	db.Create(&Theater{ID: 2, Location: "Pattaya"})
-	db.Create(&TimeSlot{ID: 2, MovieId: 1, TheaterId: 2})
-	db.Create(&SeatInfo{TheaterId: 2, TimeSlotId: 2, SeatTypeId: 1})
+	// db.Create(&SeatType{ID: 1, Price: decimal.NewFromFloat(69.9), Type: Standard})
+	// db.Create(&Theater{ID: 2, Location: "Pattaya"})
+	// db.Create(&TimeSlot{ID: 2, MovieId: 1, TheaterId: 2})
+	// db.Create(&SeatInfo{TheaterId: 2, TimeSlotId: 2, SeatTypeId: 1})
 }
