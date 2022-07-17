@@ -31,16 +31,19 @@ func BookSeat(c *gin.Context) {
 			TheaterId:  input_serializer.TheaterID,
 			SeatNumber: input_serializer.SeatID,
 		}
-		is_completed, err := kafka.PushBookingMessage(kafka_message)
-		if is_completed {
+
+		result := make(chan kafka.Result)
+		go kafka.Produce(kafka_message, result)
+		if result.is_completed {
 			c.JSON(http.StatusOK, gin.H{
 				"status": "Submitted",
 			})
 			return
 		}
+		kafka.Consume(kafka.BOOKING_TOPIC)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "Failed with error",
-			"error":  err.Error(),
+			"error":  result.err.Error(),
 		})
 	}
 }

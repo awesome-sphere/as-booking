@@ -10,6 +10,7 @@ import (
 
 	"github.com/awesome-sphere/as-booking/kafka/writer_interface"
 	"github.com/awesome-sphere/as-booking/utils"
+
 	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/snappy"
 )
@@ -19,6 +20,16 @@ var CANCEL_TOPIC string
 var BOOKING_PARTITION int
 var CANCEL_PARTITION int
 var KAFKA_ADDR string
+
+type Result struct {
+	is_completed bool
+	err          error
+}
+
+func Produce(message_value *writer_interface.BookingWriterInterface, result chan Result) {
+	is_completed, err := PushBookingMessage(message_value)
+	result <- Result{is_completed: is_completed, err: err}
+}
 
 func PushBookingMessage(message_value *writer_interface.BookingWriterInterface) (bool, error) {
 	config := kafka.WriterConfig{
@@ -95,7 +106,7 @@ func ListTopic(connector *kafka.Conn) map[string]*TopicInterface {
 
 }
 
-func isTopicExist(connector *kafka.Conn, topic_name string) bool {
+func doesTopicExist(connector *kafka.Conn, topic_name string) bool {
 	topic_map := ListTopic(connector)
 	_, ok := topic_map[topic_name]
 	return ok
@@ -128,7 +139,7 @@ func InitKafkaTopic() {
 	conn := ConnectKafka()
 	defer conn.Close()
 
-	if !isTopicExist(conn, BOOKING_TOPIC) {
+	if !doesTopicExist(conn, BOOKING_TOPIC) {
 		updateBookingtopicConfigs := []kafka.TopicConfig{
 			{
 				Topic:             BOOKING_TOPIC,
@@ -142,7 +153,7 @@ func InitKafkaTopic() {
 		}
 	}
 
-	if !isTopicExist(conn, CANCEL_TOPIC) {
+	if !doesTopicExist(conn, CANCEL_TOPIC) {
 		cancelTopicConfigs := []kafka.TopicConfig{
 			{
 				Topic:             CANCEL_TOPIC,

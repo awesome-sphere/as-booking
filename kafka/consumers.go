@@ -8,15 +8,15 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func Consume(ctx context.Context) {
+func Consume(topic_name string) {
 	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{"localhost:9092"},
-		Topic:   BOOKING_TOPIC,
-		GroupID: "booking-consumer-1",
+		Brokers: []string{KAFKA_ADDR},
+		Topic:   topic_name,
+		GroupID: "booking-consumer",
 	})
 
 	for {
-		msg, err := r.ReadMessage(ctx)
+		msg, err := r.ReadMessage(context.Background())
 		if err != nil {
 			log.Fatal("could not read message: " + err.Error())
 			break
