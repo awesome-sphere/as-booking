@@ -22,13 +22,13 @@ var CANCEL_PARTITION int
 var KAFKA_ADDR string
 
 type Result struct {
-	is_completed bool
-	err          error
+	IsCompleted bool
+	Err         error
 }
 
 func Produce(message_value *writer_interface.BookingWriterInterface, result chan Result) {
-	is_completed, err := PushBookingMessage(message_value)
-	result <- Result{is_completed: is_completed, err: err}
+	isCompleted, err := PushBookingMessage(message_value)
+	result <- Result{IsCompleted: isCompleted, Err: err}
 }
 
 func PushBookingMessage(message_value *writer_interface.BookingWriterInterface) (bool, error) {

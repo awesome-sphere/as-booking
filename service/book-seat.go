@@ -34,7 +34,8 @@ func BookSeat(c *gin.Context) {
 
 		result := make(chan kafka.Result)
 		go kafka.Produce(kafka_message, result)
-		if result.is_completed {
+		r := <-result
+		if r.IsCompleted {
 			c.JSON(http.StatusOK, gin.H{
 				"status": "Submitted",
 			})
@@ -43,7 +44,7 @@ func BookSeat(c *gin.Context) {
 		kafka.Consume(kafka.BOOKING_TOPIC)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "Failed with error",
-			"error":  result.err.Error(),
+			"error":  r.Err.Error(),
 		})
 	}
 }
