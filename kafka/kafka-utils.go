@@ -112,7 +112,7 @@ func ConnectKafka() *kafka.Conn {
 
 func InitKafkaTopic() {
 	BOOKING_TOPIC = utils.GetenvOr("KAFKA_BOOKING_TOPIC_NAME", "booking")
-	CANCEL_TOPIC = utils.GetenvOr("KAFKA_CANCEL_TOPIC_NAME", "booking")
+	CANCEL_TOPIC = utils.GetenvOr("KAFKA_CANCEL_TOPIC_NAME", "cancel_booking")
 	KAFKA_ADDR = utils.GetenvOr("KAFKA_ADDR", "localhost:9092")
 	partition_num, err := strconv.Atoi(utils.GetenvOr("KAFKA_BOOKING_TOPIC_PARTITION", "5"))
 	if err != nil {
