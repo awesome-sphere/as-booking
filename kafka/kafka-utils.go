@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -15,8 +16,6 @@ import (
 var TOPIC string
 var PARTITION int
 
-// func Test(test string, key_parition string, value &WriterWriterInterface){}
-
 func PushMessage(topic_name string, key_parition string, value *WriterInterface) {
 	// writer_connector := &kafka.Writer{
 	// 	Addr:     kafka.TCP("localhost:9094"),
@@ -24,7 +23,7 @@ func PushMessage(topic_name string, key_parition string, value *WriterInterface)
 	// 	Balancer: &kafka.LeastBytes{},
 	// }
 	config := kafka.WriterConfig{
-		Brokers:          []string{"localhost:9094"},
+		Brokers:          []string{"localhost:9092"},
 		Topic:            topic_name,
 		Balancer:         &kafka.LeastBytes{},
 		WriteTimeout:     10 * time.Second,
@@ -41,7 +40,7 @@ func PushMessage(topic_name string, key_parition string, value *WriterInterface)
 		context.Background(),
 		kafka.Message{
 			Key:   []byte(key_parition),
-			Value: []byte("Test"),
+			Value: new_byte_buffer.Bytes(),
 		},
 	)
 	if err != nil {
@@ -74,7 +73,7 @@ func isTopicExist(connector *kafka.Conn, topic_name string) bool {
 }
 
 func ConnectKafka() *kafka.Conn {
-	conn, err := kafka.Dial("tcp", "localhost:9094")
+	conn, err := kafka.Dial("tcp", "localhost:9092")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -89,6 +88,7 @@ func InitKafkaTopic() {
 	}
 
 	conn := ConnectKafka()
+	fmt.Printf("\n\n\nConnected\n\n\n")
 	defer conn.Close()
 
 	if !isTopicExist(conn, TOPIC) {
