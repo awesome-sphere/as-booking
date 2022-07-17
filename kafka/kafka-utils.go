@@ -35,7 +35,7 @@ func PushBookingMessage(message_value *writer_interface.BookingWriterInterface) 
 	config := kafka.WriterConfig{
 		Brokers:          []string{KAFKA_ADDR},
 		Topic:            BOOKING_TOPIC,
-		Balancer:         &kafka.LeastBytes{},
+		Balancer:         &PartitionBalancer{},
 		WriteTimeout:     10 * time.Second,
 		ReadTimeout:      10 * time.Second,
 		CompressionCodec: snappy.NewCompressionCodec(),
@@ -64,7 +64,7 @@ func PushCancelMessage(message_value *writer_interface.CancelWriterInterface) (b
 	config := kafka.WriterConfig{
 		Brokers:          []string{KAFKA_ADDR},
 		Topic:            CANCEL_TOPIC,
-		Balancer:         &kafka.LeastBytes{},
+		Balancer:         &PartitionBalancer{},
 		WriteTimeout:     10 * time.Second,
 		ReadTimeout:      10 * time.Second,
 		CompressionCodec: snappy.NewCompressionCodec(),
