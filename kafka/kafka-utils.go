@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
+	"log"
 	"strconv"
 	"time"
 
@@ -15,16 +15,12 @@ import (
 
 var TOPIC string
 var PARTITION int
+var KAFKA_ADDR string
 
-func PushMessage(topic_name string, key_parition string, value *WriterInterface) {
-	// writer_connector := &kafka.Writer{
-	// 	Addr:     kafka.TCP("localhost:9094"),
-	// 	Topic:    topic_name,
-	// 	Balancer: &kafka.LeastBytes{},
-	// }
+func PushMessage(message_value *WriterInterface) (bool, error) {
 	config := kafka.WriterConfig{
-		Brokers:          []string{"localhost:9092"},
-		Topic:            topic_name,
+		Brokers:          []string{KAFKA_ADDR},
+		Topic:            TOPIC,
 		Balancer:         &kafka.LeastBytes{},
 		WriteTimeout:     10 * time.Second,
 		ReadTimeout:      10 * time.Second,
@@ -34,18 +30,20 @@ func PushMessage(topic_name string, key_parition string, value *WriterInterface)
 	defer writer_connector.Close()
 
 	new_byte_buffer := new(bytes.Buffer)
-	json.NewEncoder(new_byte_buffer).Encode(value)
+	json.NewEncoder(new_byte_buffer).Encode(message_value)
 
 	err := writer_connector.WriteMessages(
 		context.Background(),
 		kafka.Message{
-			Key:   []byte(key_parition),
+			Key:   []byte(strconv.Itoa(message_value.TheaterId)),
 			Value: new_byte_buffer.Bytes(),
 		},
 	)
 	if err != nil {
-		panic(err.Error())
+		log.Println(err.Error())
+		return false, err
 	}
+	return true, nil
 }
 
 func ListTopic(connector *kafka.Conn) map[string]*TopicInterface {
@@ -73,7 +71,7 @@ func isTopicExist(connector *kafka.Conn, topic_name string) bool {
 }
 
 func ConnectKafka() *kafka.Conn {
-	conn, err := kafka.Dial("tcp", "localhost:9092")
+	conn, err := kafka.Dial("tcp", KAFKA_ADDR)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -81,14 +79,15 @@ func ConnectKafka() *kafka.Conn {
 }
 
 func InitKafkaTopic() {
-	TOPIC := utils.GetenvOr("KAFKA_TOPIC", "ah")
-	PARTITION, err := strconv.Atoi(utils.GetenvOr("KAFKA_TOPIC_PARTITION", "5"))
+	TOPIC = utils.GetenvOr("KAFKA_TOPIC", "ah")
+	KAFKA_ADDR = utils.GetenvOr("KAFKA_ADDR", "localhost:9092")
+	partition_num, err := strconv.Atoi(utils.GetenvOr("KAFKA_TOPIC_PARTITION", "5"))
 	if err != nil {
 		panic(err.Error())
 	}
+	PARTITION = partition_num
 
 	conn := ConnectKafka()
-	fmt.Printf("\n\n\nConnected\n\n\n")
 	defer conn.Close()
 
 	if !isTopicExist(conn, TOPIC) {
@@ -105,12 +104,4 @@ func InitKafkaTopic() {
 			panic(err.Error())
 		}
 	}
-	test := &WriterInterface{
-		UserID:     1,
-		TimeSlotId: 1,
-		TheaterId:  1,
-		SeatNumber: 1,
-		SeatTypeId: 1,
-	}
-	PushMessage(TOPIC, "1", test)
 }
