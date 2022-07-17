@@ -19,6 +19,7 @@ func main() {
 	kafka.InitKafkaTopic()
 
 	router.POST("/booking/book-seat", service.BookSeat)
+	router.POST("/booking/cancel-seat", service.CancelSeat)
 
 	router.Run(":9009")
 }

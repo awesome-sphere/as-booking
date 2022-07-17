@@ -10,8 +10,8 @@ import (
 
 func Consume(ctx context.Context) {
 	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{"localhost:9094"},
-		Topic:   TOPIC,
+		Brokers: []string{"localhost:9092"},
+		Topic:   BOOKING_TOPIC,
 		GroupID: "booking-consumer-1",
 	})
 

@@ -8,19 +8,51 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/awesome-sphere/as-booking/kafka/writer_interface"
 	"github.com/awesome-sphere/as-booking/utils"
 	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/snappy"
 )
 
-var TOPIC string
-var PARTITION int
+var BOOKING_TOPIC string
+var CANCEL_TOPIC string
+var BOOKING_PARTITION int
+var CANCEL_PARTITION int
 var KAFKA_ADDR string
 
-func PushMessage(message_value *WriterInterface) (bool, error) {
+func PushBookingMessage(message_value *writer_interface.BookingWriterInterface) (bool, error) {
 	config := kafka.WriterConfig{
 		Brokers:          []string{KAFKA_ADDR},
-		Topic:            TOPIC,
+		Topic:            BOOKING_TOPIC,
+		Balancer:         &kafka.LeastBytes{},
+		WriteTimeout:     10 * time.Second,
+		ReadTimeout:      10 * time.Second,
+		CompressionCodec: snappy.NewCompressionCodec(),
+	}
+	writer_connector := kafka.NewWriter(config)
+	defer writer_connector.Close()
+
+	new_byte_buffer := new(bytes.Buffer)
+	json.NewEncoder(new_byte_buffer).Encode(message_value)
+
+	err := writer_connector.WriteMessages(
+		context.Background(),
+		kafka.Message{
+			Key:   []byte(strconv.Itoa(message_value.TheaterId)),
+			Value: new_byte_buffer.Bytes(),
+		},
+	)
+	if err != nil {
+		log.Println(err.Error())
+		return false, err
+	}
+	return true, nil
+}
+
+func PushCancelMessage(message_value *writer_interface.CancelWriterInterface) (bool, error) {
+	config := kafka.WriterConfig{
+		Brokers:          []string{KAFKA_ADDR},
+		Topic:            CANCEL_TOPIC,
 		Balancer:         &kafka.LeastBytes{},
 		WriteTimeout:     10 * time.Second,
 		ReadTimeout:      10 * time.Second,
@@ -79,29 +111,48 @@ func ConnectKafka() *kafka.Conn {
 }
 
 func InitKafkaTopic() {
-	TOPIC = utils.GetenvOr("KAFKA_TOPIC", "ah")
+	BOOKING_TOPIC = utils.GetenvOr("KAFKA_BOOKING_TOPIC_NAME", "booking")
+	CANCEL_TOPIC = utils.GetenvOr("KAFKA_CANCEL_TOPIC_NAME", "booking")
 	KAFKA_ADDR = utils.GetenvOr("KAFKA_ADDR", "localhost:9092")
-	partition_num, err := strconv.Atoi(utils.GetenvOr("KAFKA_TOPIC_PARTITION", "5"))
+	partition_num, err := strconv.Atoi(utils.GetenvOr("KAFKA_BOOKING_TOPIC_PARTITION", "5"))
 	if err != nil {
 		panic(err.Error())
 	}
-	PARTITION = partition_num
+	BOOKING_PARTITION = partition_num
+	cancel_partition_num, err := strconv.Atoi(utils.GetenvOr("KAFKA_CANCEL_TOPIC_PARTITION", "5"))
+	if err != nil {
+		panic(err.Error())
+	}
+	CANCEL_PARTITION = cancel_partition_num
 
 	conn := ConnectKafka()
 	defer conn.Close()
 
-	if !isTopicExist(conn, TOPIC) {
-		topicConfigs := []kafka.TopicConfig{
+	if !isTopicExist(conn, BOOKING_TOPIC) {
+		updateBookingtopicConfigs := []kafka.TopicConfig{
 			{
-				Topic:             TOPIC,
-				NumPartitions:     PARTITION,
+				Topic:             BOOKING_TOPIC,
+				NumPartitions:     BOOKING_PARTITION,
 				ReplicationFactor: 1,
 			},
 		}
-
-		err := conn.CreateTopics(topicConfigs...)
+		err := conn.CreateTopics(updateBookingtopicConfigs...)
 		if err != nil {
-			panic(err.Error())
+			panic("Booking Topic: " + err.Error())
+		}
+	}
+
+	if !isTopicExist(conn, CANCEL_TOPIC) {
+		cancelTopicConfigs := []kafka.TopicConfig{
+			{
+				Topic:             CANCEL_TOPIC,
+				NumPartitions:     CANCEL_PARTITION,
+				ReplicationFactor: 1,
+			},
+		}
+		err := conn.CreateTopics(cancelTopicConfigs...)
+		if err != nil {
+			panic("Cancel Topic: " + err.Error())
 		}
 	}
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func BookSeat(c *gin.Context) {
+func CancelSeat(c *gin.Context) {
 	is_valid, claimed_token := jwt.IsValidJWT(c)
 	if is_valid {
 		var input_serializer serializer.InputSerializer
@@ -25,13 +25,13 @@ func BookSeat(c *gin.Context) {
 			})
 			return
 		}
-		kafka_message := &writer_interface.BookingWriterInterface{
+		kafka_message := &writer_interface.CancelWriterInterface{
 			UserID:     int(user_id),
 			TimeSlotId: input_serializer.TimeSlotId,
 			TheaterId:  input_serializer.TheaterID,
 			SeatNumber: input_serializer.SeatID,
 		}
-		is_completed, err := kafka.PushBookingMessage(kafka_message)
+		is_completed, err := kafka.PushCancelMessage(kafka_message)
 		if is_completed {
 			c.JSON(http.StatusOK, gin.H{
 				"status": "Submitted",
