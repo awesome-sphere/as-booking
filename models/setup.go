@@ -12,6 +12,7 @@ import (
 )
 
 var DB *gorm.DB
+var THEATER_AMOUNT int
 
 func InitDatabase() {
 	dbUser := utils.GetenvOr("POSTGRES_USER", "pkinwza")
@@ -24,6 +25,7 @@ func InitDatabase() {
 	if err != nil {
 		log.Fatal("Fail to convert type of THEATER_AMOUNT")
 	}
+	THEATER_AMOUNT = theater_number
 
 	dbURL := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s",
@@ -40,9 +42,9 @@ func InitDatabase() {
 		log.Fatal(err)
 	}
 
-	db.AutoMigrate(&SeatType{})
-	db.AutoMigrate(&Seat{}, &Theater{})
-	for i := 1; i <= theater_number; i++ {
+	db.AutoMigrate(&SeatType{}, &Theater{})
+	// db.AutoMigrate(&Seat{}, &Theater{})
+	for i := 0; i <= theater_number; i++ {
 		time_slot_table := fmt.Sprintf("time_slots_%01d", i)
 		if !db.Migrator().HasTable(time_slot_table) {
 			db.AutoMigrate(&TimeSlot{})
@@ -62,9 +64,5 @@ func InitDatabase() {
 		PrimaryKeyGenerator: sharding.PKPGSequence,
 	}, "time_slots", "seat_infos"))
 	DB = db
-	// // Testing
-	// db.Create(&SeatType{ID: 1, Price: decimal.NewFromFloat(69.9), Type: Standard})
-	// db.Create(&Theater{ID: 2, Location: "Pattaya"})
-	// db.Create(&TimeSlot{ID: 2, MovieId: 1, TheaterId: 2})
-	// db.Create(&SeatInfo{TheaterId: 2, TimeSlotId: 2, SeatTypeId: 1})
+	go SeedData()
 }

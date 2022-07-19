@@ -6,11 +6,18 @@ import (
 	"github.com/awesome-sphere/as-booking/jwt"
 	"github.com/awesome-sphere/as-booking/kafka"
 	"github.com/awesome-sphere/as-booking/kafka/writer_interface"
+	"github.com/awesome-sphere/as-booking/models"
 	"github.com/awesome-sphere/as-booking/serializer"
 	"github.com/gin-gonic/gin"
 )
 
 func CancelSeat(c *gin.Context) {
+	if !models.DONE_SEEDING {
+		c.JSON(http.StatusAccepted, gin.H{
+			"message": "Service is not ready, please try later",
+		})
+		return
+	}
 	is_valid, claimed_token := jwt.IsValidJWT(c)
 	if is_valid {
 		var input_serializer serializer.InputSerializer
