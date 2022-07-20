@@ -32,6 +32,8 @@ func updateBookingStatus(message []byte) {
 		return
 	}
 
+	totalPrice := 0
+
 	for _, seatNum := range value.SeatNumber {
 
 		status := "BOOKED"
@@ -55,9 +57,11 @@ func updateBookingStatus(message []byte) {
 			return
 		}
 
-		// updateRedisStatus(value.TheaterID, value.TimeSlotID, seatNum, status)
-		updatePaymentOrder(value.UserID, value.TheaterID, value.TimeSlotID, seatNum, true)
+		totalPrice += seatInfo.SeatType.Price
+
+		updateRedisStatus(value.TheaterID, value.TimeSlotID, seatNum, status)
 	}
+	updatePaymentOrder(value.UserID, value.TheaterID, value.TimeSlotID, value.SeatNumber, totalPrice, true)
 }
 
 func updateCancelingStatus(message []byte) {
@@ -71,6 +75,8 @@ func updateCancelingStatus(message []byte) {
 		log.Fatalf("Failed to unmarshal message: %v", err.Error())
 		return
 	}
+
+	totalPrice := 0
 
 	for _, seatNum := range value.SeatNumber {
 
@@ -95,9 +101,11 @@ func updateCancelingStatus(message []byte) {
 			return
 		}
 
+		totalPrice += seatInfo.SeatType.Price
+
 		updateRedisStatus(value.TheaterID, value.TimeSlotID, seatNum, status)
-		updatePaymentOrder(value.UserID, value.TheaterID, value.TimeSlotID, seatNum, false)
 	}
+	updatePaymentOrder(value.UserID, value.TheaterID, value.TimeSlotID, value.SeatNumber, totalPrice, false)
 }
 
 func updateRedisStatus(theaterID int, timeSlotID int, seatNum int, status string) {
@@ -123,22 +131,7 @@ func updateRedisStatus(theaterID int, timeSlotID int, seatNum int, status string
 	defer resp.Body.Close()
 }
 
-func updatePaymentOrder(userID int, theaterID int, timeSlotID int, seatNum int, order bool) {
-	var seatInfo models.SeatInfo
-	var querySet []models.SeatInfo
-
-	if err := models.DB.Model(&seatInfo).Where(
-		"theater_id", theaterID,
-	).Find(
-		&querySet,
-	).Where(
-		"time_slot_id = ?", timeSlotID,
-	).Where(
-		"seat_number = ?", seatNum,
-	).Error; err != nil {
-		log.Fatal(err.Error())
-		return
-	}
+func updatePaymentOrder(userID int, theaterID int, timeSlotID int, seatNum []int, price int, order bool) {
 
 	jsonString := fmt.Sprintf(
 		`{
@@ -147,7 +140,7 @@ func updatePaymentOrder(userID int, theaterID int, timeSlotID int, seatNum int, 
 			"time_slot_id": %d,
 			"seat_number": %d,
 			"price": %d
-		}`, userID, theaterID, timeSlotID, seatNum, seatInfo.SeatType.Price,
+		}`, userID, theaterID, timeSlotID, seatNum, price,
 	)
 	json := []byte(jsonString)
 

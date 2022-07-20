@@ -4,8 +4,6 @@ import (
 	"log"
 	"math/rand"
 	"time"
-
-	"github.com/shopspring/decimal"
 )
 
 var DONE_SEEDING bool
@@ -29,8 +27,8 @@ func SeedThreater() []int {
 
 func SeedSeatType() []SeatType {
 	seat_type := []SeatType{
-		{Price: decimal.NewFromFloat(200.0), Type: Standard},
-		{Price: decimal.NewFromFloat(450.0), Type: Premium},
+		{Price: 200, Type: Standard},
+		{Price: 450, Type: Premium},
 	}
 	DB.Create(seat_type)
 	return seat_type
