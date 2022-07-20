@@ -20,7 +20,7 @@ func main() {
 
 	router.POST("/booking/book-seat", service.BookSeat)
 	router.POST("/booking/cancel-seat", service.CancelSeat)
-	router.GET("/booking/get-time-slots", service.GetAllTimeSlot)
+	router.POST("/booking/get-time-slots", service.GetAllTimeSlot)
 
 	router.Run(":9009")
 }
