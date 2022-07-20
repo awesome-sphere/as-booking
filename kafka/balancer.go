@@ -6,14 +6,9 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-type randomBalancer struct {
-	mock int // mocked return value, used for testing
-}
+type randomBalancer struct{}
 
 func (b randomBalancer) Balance(msg kafka.Message, partitions ...int) (partition int) {
-	if b.mock != 0 {
-		return b.mock
-	}
 	return partitions[rand.Int()%len(partitions)]
 }
 
@@ -25,5 +20,5 @@ func (balancer *PartitionBalancer) Balance(msg kafka.Message, partitions ...int)
 	if msg.Partition == 0 || msg.Partition > len(partitions) {
 		return balancer.rr.Balance(msg, partitions...)
 	}
-	return msg.Partition
+	return msg.Partition - 1
 }

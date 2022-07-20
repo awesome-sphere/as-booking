@@ -5,7 +5,7 @@ import (
 
 	"github.com/awesome-sphere/as-booking/jwt"
 	"github.com/awesome-sphere/as-booking/kafka"
-	"github.com/awesome-sphere/as-booking/kafka/writer_interface"
+	"github.com/awesome-sphere/as-booking/kafka/interfaces"
 	"github.com/awesome-sphere/as-booking/serializer"
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +25,7 @@ func BookSeat(c *gin.Context) {
 			})
 			return
 		}
-		kafka_message := &writer_interface.BookingWriterInterface{
+		kafka_message := &interfaces.BookingWriterInterface{
 			UserID:     int(user_id),
 			TimeSlotId: input_serializer.TimeSlotId,
 			TheaterId:  input_serializer.TheaterID,
@@ -33,7 +33,7 @@ func BookSeat(c *gin.Context) {
 		}
 
 		result := make(chan kafka.Result)
-		go kafka.Produce(kafka_message, result)
+		go kafka.ProduceBooking(kafka_message, result)
 		r := <-result
 		if r.IsCompleted {
 			c.JSON(http.StatusOK, gin.H{
@@ -41,7 +41,6 @@ func BookSeat(c *gin.Context) {
 			})
 			return
 		}
-		kafka.Consume(kafka.BOOKING_TOPIC)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "Failed with error",
 			"error":  r.Err.Error(),
