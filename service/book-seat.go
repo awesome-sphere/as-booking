@@ -6,11 +6,18 @@ import (
 	"github.com/awesome-sphere/as-booking/jwt"
 	"github.com/awesome-sphere/as-booking/kafka"
 	"github.com/awesome-sphere/as-booking/kafka/interfaces"
+	"github.com/awesome-sphere/as-booking/models"
 	"github.com/awesome-sphere/as-booking/serializer"
 	"github.com/gin-gonic/gin"
 )
 
 func BookSeat(c *gin.Context) {
+	if !models.DONE_SEEDING {
+		c.JSON(http.StatusAccepted, gin.H{
+			"message": "Service is not ready, please try later",
+		})
+		return
+	}
 	isValid, claimedToken := jwt.IsValidJWT(c)
 	if isValid {
 		var inputSerializer serializer.InputSerializer
@@ -18,7 +25,7 @@ func BookSeat(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		userID, ok := claimedToken["userID"].(float64)
+		userID, ok := claimedToken["user_id"].(float64)
 		if !ok {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "Error converting User ID (User ID is not given or wrong type)",
