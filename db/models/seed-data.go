@@ -38,9 +38,9 @@ func SeedSeatType() []SeatType {
 
 func SeedTimeSlot(theater_ids []int) map[int][]int {
 	time_slots := make(map[int][]int)
-	for movie := 1; movie <= 5; movie++ {
-		for day_count := 0; day_count < 5; day_count++ {
-			for _, theater_id := range theater_ids {
+	for _, theater_id := range theater_ids {
+		for movie := 1; movie <= 5; movie++ {
+			for day_count := 0; day_count < 5; day_count++ {
 				for slot := 0; slot < 5; slot++ {
 					hour := rand.Intn(4-2) + 2
 					minute := rand.Intn(50-5) + 5
@@ -64,9 +64,10 @@ func SeedTimeSlot(theater_ids []int) map[int][]int {
 }
 
 func SeedSeat(time_slots map[int][]int, seat_types []SeatType) {
-	for _, seat_type := range seat_types {
-		is_standard := seat_type.Type == Standard
-		for theater_id, theater_time_slots := range time_slots {
+	for theater_id, theater_time_slots := range time_slots {
+		for _, seat_type := range seat_types {
+			is_standard := seat_type.Type == Standard
+			// for theater_id, theater_time_slots := range time_slots {
 			for _, theater_time_slot := range theater_time_slots {
 				amount := 0
 				start := 1
