@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/awesome-sphere/as-booking/db"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -32,6 +33,8 @@ func readFromReader(r *kafka.Reader) {
 		}
 
 		fmt.Printf("Reading message at topic [%v] partition [%v] offset [%v]: %s", msg.Topic, msg.Partition, msg.Offset, string(msg.Value))
+
+		db.UpdateStatus(msg.Topic, msg.Value)
 	}
 }
 
