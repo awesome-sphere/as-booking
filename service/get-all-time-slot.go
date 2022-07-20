@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/awesome-sphere/as-booking/models"
+	"github.com/awesome-sphere/as-booking/serializer"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,16 +20,21 @@ func GetTheaterID(c *gin.Context) (bool, []models.Theater) {
 	return true, querySet
 }
 
-func GetTimeSlots(theater_id int) (bool, []models.TimeSlot) {
+func GetTimeSlots(c *gin.Context, theater_id int, movie_id int) (bool, []serializer.TimeSlotOutputSerializer) {
 	var querySet []models.TimeSlot
-	err := models.DB.Model(&models.TimeSlot{}).Where("theater_id", theater_id).Find(&querySet).Error
+	var filteredColumnQurySet []serializer.TimeSlotOutputSerializer
+	err := models.DB.Model(&models.TimeSlot{}).Where(
+		"theater_id", theater_id,
+	).Find(&querySet).Where(
+		"movie_id", movie_id,
+	).Find(&filteredColumnQurySet).Error
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
-		return false, querySet
+		return false, []serializer.TimeSlotOutputSerializer{}
 	}
-	return true, querySet
+	return true, filteredColumnQurySet
 }
 
 func GetAllTimeSlot(c *gin.Context) {
@@ -38,17 +44,26 @@ func GetAllTimeSlot(c *gin.Context) {
 		})
 		return
 	}
+	var inputSerializer serializer.TimeSlotInputSerializer
+	if err := c.BindJSON(&inputSerializer); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	status, all_theaters := GetTheaterID(c)
 	if status {
 		// theater id => time slot[]
-		all_time_slots := make(map[int][]models.TimeSlot)
+		all_time_slots := []serializer.TimeSlotOutputSerializer{}
 		for _, theater := range all_theaters {
-			status, time_slot_for_theater := GetTimeSlots(int(theater.ID))
+			status, time_slot_for_theater := GetTimeSlots(c, int(theater.ID), inputSerializer.MovieID)
 			if !status {
 				return
 			}
+			all_time_slots = append(all_time_slots, time_slot_for_theater...)
 
 		}
+		c.JSON(http.StatusOK, gin.H{
+			"time_slots": all_time_slots,
+		})
 		return
 
 	}
