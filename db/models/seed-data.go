@@ -47,7 +47,7 @@ func SeedTimeSlot(theater_ids []int) map[int][]int {
 					time_slot := TimeSlot{
 						MovieID:   movie,
 						TheaterID: theater_id,
-						Time:      time.Date(2022, 7, 22+day_count, 10+slot+hour, minute, 0, 0, time.UTC),
+						Time:      time.Date(2022, 7, 22+day_count, 1+slot+hour, minute, 0, 0, time.UTC),
 					}
 					DB.Create(&time_slot)
 					if _, ok := time_slots[theater_id]; ok {

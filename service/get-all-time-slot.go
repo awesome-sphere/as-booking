@@ -73,6 +73,8 @@ func GetAllTimeSlot(c *gin.Context) {
 		all_time_slots := []serializer.TimeSlotOutputSerializer{}
 		for _, theater := range all_theaters {
 			status, date_slot, time_slot_for_theater := GetTimeSlots(c, int(theater.ID), inputSerializer.MovieID)
+			// fmt.Println(time_slot_for_theater)
+			// fmt.Println(" ")
 			if !status {
 				return
 			}
