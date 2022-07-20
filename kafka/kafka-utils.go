@@ -52,7 +52,7 @@ func PushBookingMessage(value *interfaces.BookingWriterInterface) (bool, error) 
 	byteBuffer := new(bytes.Buffer)
 	json.NewEncoder(byteBuffer).Encode(value)
 
-	partition := value.TheaterId
+	partition := value.TheaterID
 
 	fmt.Printf("Writing message to topic [%s] partition [%d]: %s", BOOKING_TOPIC, partition, byteBuffer.Bytes())
 
@@ -85,7 +85,7 @@ func PushCancelingMessage(value *interfaces.CancelingWriterInterface) (bool, err
 	byteBuffer := new(bytes.Buffer)
 	json.NewEncoder(byteBuffer).Encode(value)
 
-	partition := value.TheaterId
+	partition := value.TheaterID
 
 	fmt.Printf("Writing message to topic [%s] partition [%d]: %s", CANCELING_TOPIC, partition, byteBuffer.Bytes())
 

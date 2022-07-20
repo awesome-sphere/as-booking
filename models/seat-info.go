@@ -12,9 +12,9 @@ const (
 
 type SeatInfo struct {
 	ID         int64 `json:"id" gorm:"primaryKey;autoincrement;not null;"`
-	TimeSlotId int   `json:"time_slot_id" gorm:"not null;"`
+	TimeSlotID int   `json:"time_slot_id" gorm:"not null;"`
 	// TimeSlot   TimeSlot   `gorm:"foreignKey:time_slot_id; constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	TheaterId  int        `json:"theater_id" gorm:"not null"`
+	TheaterID  int        `json:"theater_id" gorm:"not null"`
 	Theater    Theater    `gorm:"foreignKey:theater_id; constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	SeatNumber int        `json:"seat_number" gorm:"not null"`
 	SeatTypeId int        `json:"seat_type_id" gorm:"not null"`

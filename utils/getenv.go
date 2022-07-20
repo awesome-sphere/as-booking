@@ -2,10 +2,10 @@ package utils
 
 import "os"
 
-func GetenvOr(key, default_val string) string {
+func GetenvOr(key, defaultVal string) string {
 	value := os.Getenv(key)
 	if value == "" {
-		value = default_val
+		value = defaultVal
 	}
 	return value
 }

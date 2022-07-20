@@ -11,29 +11,29 @@ import (
 )
 
 func BookSeat(c *gin.Context) {
-	is_valid, claimed_token := jwt.IsValidJWT(c)
-	if is_valid {
-		var input_serializer serializer.InputSerializer
-		if err := c.BindJSON(&input_serializer); err != nil {
+	isValid, claimedToken := jwt.IsValidJWT(c)
+	if isValid {
+		var inputSerializer serializer.InputSerializer
+		if err := c.BindJSON(&inputSerializer); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		user_id, ok := claimed_token["user_id"].(float64)
+		userID, ok := claimedToken["userID"].(float64)
 		if !ok {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "Error converting User ID (User ID is not given or wrong type)",
 			})
 			return
 		}
-		kafka_message := &interfaces.BookingWriterInterface{
-			UserID:     int(user_id),
-			TimeSlotId: input_serializer.TimeSlotId,
-			TheaterId:  input_serializer.TheaterID,
-			SeatNumber: input_serializer.SeatID,
+		message := &interfaces.BookingWriterInterface{
+			UserID:     int(userID),
+			TimeSlotID: inputSerializer.TimeSlotID,
+			TheaterID:  inputSerializer.TheaterID,
+			SeatNumber: inputSerializer.SeatID,
 		}
 
 		result := make(chan kafka.Result)
-		go kafka.ProduceBooking(kafka_message, result)
+		go kafka.ProduceBooking(message, result)
 		r := <-result
 		if r.IsCompleted {
 			c.JSON(http.StatusOK, gin.H{
