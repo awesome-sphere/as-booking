@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/awesome-sphere/as-booking/db/models"
 	"github.com/awesome-sphere/as-booking/jwt"
 	"github.com/awesome-sphere/as-booking/kafka"
-	"github.com/awesome-sphere/as-booking/models"
 	"github.com/awesome-sphere/as-booking/service"
 	"github.com/gin-gonic/gin"
 )

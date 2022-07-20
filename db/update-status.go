@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/awesome-sphere/as-booking/db/models"
 	"github.com/awesome-sphere/as-booking/kafka/interfaces"
-	"github.com/awesome-sphere/as-booking/models"
 )
 
 func UpdateStatus(topic string, message []byte) {

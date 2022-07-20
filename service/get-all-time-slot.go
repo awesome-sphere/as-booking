@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/awesome-sphere/as-booking/models"
+	"github.com/awesome-sphere/as-booking/db/models"
 	"github.com/awesome-sphere/as-booking/serializer"
 	"github.com/gin-gonic/gin"
 )
