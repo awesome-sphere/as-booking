@@ -3,13 +3,13 @@ package db
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/awesome-sphere/as-booking/db/models"
 	"github.com/awesome-sphere/as-booking/kafka/interfaces"
+	"github.com/awesome-sphere/as-booking/serializer"
 )
 
 func UpdateStatus(topic string, message []byte) {
@@ -57,7 +57,10 @@ func updateBookingStatus(message []byte) {
 			return
 		}
 
-		totalPrice += seatInfo.SeatType.Price
+		// FIXME: can't do this because it doesn't query from DB
+		// totalPrice += seatInfo.SeatType.Price
+		// FIXME: this is dummy
+		totalPrice += 200
 
 		updateRedisStatus(value.TheaterID, value.TimeSlotID, seatNum, status)
 	}
@@ -111,15 +114,18 @@ func updateCancelingStatus(message []byte) {
 func updateRedisStatus(theaterID int, timeSlotID int, seatNum int, status string) {
 	url := "http://localhost:9004/seating/update-status"
 
-	jsonString := fmt.Sprintf(
-		`{
-			"theater_id": %d,
-			"time_slot_id": %d,
-			"seat_number": %d,
-			"seat_status": "%s"
-		}`, theaterID, timeSlotID, seatNum, status,
-	)
-	json := []byte(jsonString)
+	input := serializer.UpdateStatusSerializer{
+		TimeSlotID: timeSlotID,
+		TheaterID:  theaterID,
+		SeatID:     seatNum,
+		Status:     status,
+	}
+	json, err := json.Marshal(input)
+
+	if err != nil {
+		log.Fatal(err.Error())
+		return
+	}
 
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(json))
 
@@ -132,17 +138,20 @@ func updateRedisStatus(theaterID int, timeSlotID int, seatNum int, status string
 }
 
 func updatePaymentOrder(userID int, theaterID int, timeSlotID int, seatNum []int, price int, order bool) {
+	input := serializer.UpdatePaymentSerializer{
+		UserID:     userID,
+		TheaterID:  theaterID,
+		SeatID:     seatNum,
+		TimeSlotId: timeSlotID,
+		Price:      price,
+	}
 
-	jsonString := fmt.Sprintf(
-		`{
-			"user_id": %d
-			"theater_id": %d,
-			"time_slot_id": %d,
-			"seat_number": %d,
-			"price": %d
-		}`, userID, theaterID, timeSlotID, seatNum, price,
-	)
-	json := []byte(jsonString)
+	json, err := json.Marshal(input)
+
+	if err != nil {
+		log.Fatal(err.Error())
+		return
+	}
 
 	url := "http://localhost:9003/payment/"
 	if order {
