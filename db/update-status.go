@@ -55,7 +55,7 @@ func updateBookingStatus(message []byte) {
 			return
 		}
 
-		// updateRedisStatus(value.TheaterID, value.TimeSlotID, seatNum, status)
+		updateRedisStatus(value.TheaterID, value.TimeSlotID, seatNum, status)
 		updatePaymentOrder(value.UserID, value.TheaterID, value.TimeSlotID, seatNum, true)
 	}
 }
