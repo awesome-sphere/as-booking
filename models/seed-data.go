@@ -69,17 +69,20 @@ func SeedSeat(time_slots map[int][]int, seat_types []SeatType) {
 		for theater_id, theater_time_slots := range time_slots {
 			for _, theater_time_slot := range theater_time_slots {
 				amount := 0
+				start := 1
 				if is_standard {
 					amount = 40
 				} else {
+					start = 41
 					amount = 15
 				}
-				for i := 0; i < amount; i++ {
+				for i := start; i < start+amount; i++ {
 					if is_standard {
 						seat := SeatInfo{
 							TimeSlotID: theater_time_slot,
 							TheaterID:  theater_id,
 							SeatTypeID: int(seat_type.ID),
+							SeatNumber: i,
 							Status:     Available,
 						}
 						DB.Create(&seat)
@@ -88,6 +91,7 @@ func SeedSeat(time_slots map[int][]int, seat_types []SeatType) {
 							TimeSlotID: theater_time_slot,
 							TheaterID:  theater_id,
 							SeatTypeID: int(seat_type.ID),
+							SeatNumber: i,
 							Status:     Available,
 						}
 						DB.Create(&seat)

@@ -41,6 +41,7 @@ func InitDatabase() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	var does_table_exist bool
 
 	db.AutoMigrate(&SeatType{}, &Theater{})
 	// db.AutoMigrate(&Seat{}, &Theater{})
@@ -49,12 +50,18 @@ func InitDatabase() {
 		if !db.Migrator().HasTable(time_slot_table) {
 			db.AutoMigrate(&TimeSlot{})
 			db.Migrator().RenameTable("time_slots", time_slot_table)
+			if !does_table_exist {
+				does_table_exist = true
+			}
 		}
 
 		seat_info_table := fmt.Sprintf("seat_infos_%01d", i)
 		if !db.Migrator().HasTable(seat_info_table) {
 			db.AutoMigrate(&SeatInfo{})
 			db.Migrator().RenameTable("seat_infos", seat_info_table)
+			if !does_table_exist {
+				does_table_exist = true
+			}
 		}
 
 	}
@@ -64,5 +71,9 @@ func InitDatabase() {
 		PrimaryKeyGenerator: sharding.PKPGSequence,
 	}, "time_slots", "seat_infos"))
 	DB = db
-	go SeedData()
+	if does_table_exist {
+		go SeedData()
+	} else {
+		DONE_SEEDING = true
+	}
 }
