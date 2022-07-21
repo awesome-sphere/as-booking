@@ -22,8 +22,11 @@ func BuySeat(c *gin.Context) {
 	}
 
 	var seatInfo models.SeatInfo
+	var timeSlot models.TimeSlot
+
 	var theater models.Theater
-	var result models.SeatInfo
+	var locationResult models.SeatInfo
+	var timeSlotResult models.TimeSlot
 
 	status := "BOUGHT"
 
@@ -50,10 +53,26 @@ func BuySeat(c *gin.Context) {
 			return
 		}
 
-		result = seatNumQuerySet
+		locationResult = seatNumQuerySet
+
+		var querySet models.TimeSlot
+
+		if err := models.DB.Model(&timeSlot).Where(
+			"theater_id", inputSerializer.TheaterID,
+		).Find(
+			&querySet, "id = ?", int64(inputSerializer.TimeSlotID),
+		).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status": "Failed with error",
+				"error":  err.Error(),
+			})
+			return
+		}
+
+		timeSlotResult = querySet
 	}
 
-	if err := models.DB.Find(&theater, "id", result.TheaterID).Error; err != nil {
+	if err := models.DB.Find(&theater, "id", locationResult.TheaterID).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "Failed with error",
 			"error":  err.Error(),
@@ -63,5 +82,7 @@ func BuySeat(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"location": theater.Location,
+		"date":     timeSlotResult.Time,
+		"movie_id": timeSlotResult.MovieID,
 	})
 }
