@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/awesome-sphere/as-booking/db/models"
 	"github.com/awesome-sphere/as-booking/jwt"
+	"github.com/awesome-sphere/as-booking/kafka"
 	"github.com/awesome-sphere/as-booking/service"
 	"github.com/gin-gonic/gin"
 )
@@ -15,7 +16,7 @@ func main() {
 	// initialze database
 	jwt.InitializeJWTSettings()
 	models.InitDatabase()
-	// kafka.InitKafkaTopic()
+	kafka.InitKafkaTopic()
 
 	router.POST("/booking/book-seat", service.BookSeat)
 	router.POST("/booking/cancel-seat", service.CancelSeat)
