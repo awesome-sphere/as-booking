@@ -2,7 +2,7 @@ name: Build as-booking CI
 
 on: 
   push:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   build-as-booking:
