@@ -22,7 +22,7 @@ func UpdateStatus(topic string, message []byte) {
 
 func updateBookingStatus(message []byte) {
 	var seatInfo models.SeatInfo
-	var querySet []models.SeatInfo
+	var seatType models.SeatType
 
 	var value interfaces.BookingWriterInterface
 	err := json.Unmarshal(message, &value)
@@ -32,20 +32,20 @@ func updateBookingStatus(message []byte) {
 		return
 	}
 
+	status := "BOOKED"
 	totalPrice := 0
 
 	for _, seatNum := range value.SeatNumber {
 
-		status := "BOOKED"
+		var timeSlotQuerySet []models.SeatInfo
+		var seatNumQuerySet models.SeatInfo
 
 		if err := models.DB.Model(&seatInfo).Where(
 			"theater_id", value.TheaterID,
 		).Find(
-			&querySet,
-		).Where(
-			"time_slot_id = ?", value.TimeSlotID,
-		).Where(
-			"seat_number = ?", seatNum,
+			&timeSlotQuerySet, "time_slot_id = ?", value.TimeSlotID,
+		).Find(
+			&seatNumQuerySet, "seat_number = ?", seatNum,
 		).Updates(
 			models.SeatInfo{
 				Status:     models.SeatStatus(status),
@@ -57,10 +57,12 @@ func updateBookingStatus(message []byte) {
 			return
 		}
 
-		// FIXME: can't do this because it doesn't query from DB
-		// totalPrice += seatInfo.SeatType.Price
-		// FIXME: this is dummy
-		totalPrice += 200
+		if err := models.DB.Find(&seatType, "id", seatNumQuerySet.SeatTypeID).Error; err != nil {
+			log.Fatal(err.Error())
+			return
+		}
+
+		totalPrice += seatType.Price
 
 		updateRedisStatus(value.TheaterID, value.TimeSlotID, seatNum, status)
 	}
@@ -69,7 +71,7 @@ func updateBookingStatus(message []byte) {
 
 func updateCancelingStatus(message []byte) {
 	var seatInfo models.SeatInfo
-	var querySet []models.SeatInfo
+	var seatType models.SeatType
 
 	var value interfaces.CancelingWriterInterface
 	err := json.Unmarshal(message, &value)
@@ -79,32 +81,37 @@ func updateCancelingStatus(message []byte) {
 		return
 	}
 
+	status := "AVAILABLE"
 	totalPrice := 0
 
 	for _, seatNum := range value.SeatNumber {
 
-		status := "AVAILABLE"
+		var timeSlotQuerySet []models.SeatInfo
+		var seatNumQuerySet models.SeatInfo
 
 		if err := models.DB.Model(&seatInfo).Where(
 			"theater_id", value.TheaterID,
 		).Find(
-			&querySet,
-		).Where(
-			"time_slot_id = ?", value.TimeSlotID,
-		).Where(
-			"seat_number = ?", seatNum,
+			&timeSlotQuerySet, "time_slot_id = ?", value.TimeSlotID,
+		).Find(
+			&seatNumQuerySet, "seat_number = ?", seatNum,
 		).Updates(
 			models.SeatInfo{
 				Status:     models.SeatStatus(status),
 				BookedTime: time.Now(),
-				BookedBy:   0,
+				BookedBy:   -1,
 			},
 		).Error; err != nil {
 			log.Fatal(err.Error())
 			return
 		}
 
-		totalPrice += seatInfo.SeatType.Price
+		if err := models.DB.Find(&seatType, "id", seatNumQuerySet.SeatTypeID).Error; err != nil {
+			log.Fatal(err.Error())
+			return
+		}
+
+		totalPrice += seatType.Price
 
 		updateRedisStatus(value.TheaterID, value.TimeSlotID, seatNum, status)
 	}
@@ -165,8 +172,6 @@ func updatePaymentOrder(userID int, theaterID int, timeSlotID int, seatNum []int
 	if err != nil {
 		log.Fatal(err.Error())
 		return
-	} else {
-		log.Println(resp.Body)
 	}
 
 	defer resp.Body.Close()
