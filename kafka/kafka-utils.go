@@ -180,7 +180,4 @@ func InitKafkaTopic() {
 			panic("Cancel Topic: " + err.Error())
 		}
 	}
-
-	Consume(BOOKING_TOPIC, "booking-consumer", BOOKING_PARTITION)
-	Consume(CANCELING_TOPIC, "canceling-consumer", CANCELING_PARTITION)
 }
