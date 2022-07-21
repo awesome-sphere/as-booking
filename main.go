@@ -10,7 +10,7 @@ import (
 
 func main() {
 	// NOTE: Change to ReleaseMode when releasing the app
-	gin.SetMode(gin.DebugMode)
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 
 	// initialze database
