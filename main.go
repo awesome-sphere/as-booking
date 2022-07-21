@@ -14,9 +14,9 @@ func main() {
 	router := gin.Default()
 
 	// initialze database
+	kafka.InitKafkaTopic()
 	jwt.InitializeJWTSettings()
 	models.InitDatabase()
-	kafka.InitKafkaTopic()
 
 	router.POST("/booking/book-seat", service.BookSeat)
 	router.POST("/booking/cancel-seat", service.CancelSeat)
